@@ -73,7 +73,7 @@ async fn main() -> Result<()> {
                 format!("Installing from deeplink: {}", package_id).bold()
             );
             require_game_root()?;
-            commands::install::run(cli::InstallArgs { name: package_id }).await?
+            commands::install::run(cli::InstallArgs { names: vec![package_id] }).await?
         }
     }
 

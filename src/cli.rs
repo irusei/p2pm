@@ -12,7 +12,7 @@ pub struct Cli {
 pub enum Commands {
     /// Root folder path setup
     Settings(SettingsArgs),
-    /// Install a mod
+    /// Install one or more mods
     Install(InstallArgs),
     /// Update installed mods
     Update(UpdateArgs),
@@ -20,7 +20,7 @@ pub enum Commands {
     Search(SearchArgs),
     /// List currently installed mods
     List,
-    /// Uninstall a mod
+    /// Uninstall one or more mods
     Uninstall(UninstallArgs),
     /// Open a mod folder
     Open(OpenArgs),
@@ -38,7 +38,9 @@ pub struct SettingsArgs {
 
 #[derive(clap::Args)]
 pub struct InstallArgs {
-    pub name: String,
+    /// Package(s) to install
+    #[arg(required = true)]
+    pub names: Vec<String>,
 }
 
 #[derive(clap::Args)]
@@ -62,7 +64,9 @@ pub struct DeeplinkArgs {
 
 #[derive(clap::Args)]
 pub struct UninstallArgs {
-    pub name: String,
+    /// Package(s) to uninstall
+    #[arg(required = true)]
+    pub names: Vec<String>,
 }
 
 #[derive(clap::Args)]
