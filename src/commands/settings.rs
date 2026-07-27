@@ -9,7 +9,7 @@ pub async fn run(args: SettingsArgs) -> Result<()> {
             config::save_game_root(&path)?;
             println!(
                 "{} {}",
-                "[P2PM]".cyan().bold(),
+                "[p2pm]".cyan().bold(),
                 format!("PAYDAY 2 root folder set to: {}", path).bold()
             );
         }
@@ -17,14 +17,14 @@ pub async fn run(args: SettingsArgs) -> Result<()> {
             Ok(Some(path)) => {
                 println!(
                     "{} {}",
-                    "[P2PM]".cyan().bold(),
+                    "[p2pm]".cyan().bold(),
                     format!("Current PAYDAY 2 root folder: {}", path.display()).bold()
                 );
             }
             Ok(None) => {
                 println!(
                     "{} {}",
-                    "[P2PM]".cyan().bold(),
+                    "[p2pm]".cyan().bold(),
                     "No game root folder configured.".dimmed()
                 );
                 println!(

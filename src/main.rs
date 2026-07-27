@@ -69,7 +69,7 @@ async fn main() -> Result<()> {
             let package_id = deeplink::parse_deeplink(&cmd.url)?;
             println!(
                 "{} {}",
-                "[P2PM]".cyan().bold(),
+                "[p2pm]".cyan().bold(),
                 format!("Installing from deeplink: {}", package_id).bold()
             );
             require_game_root()?;

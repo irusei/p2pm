@@ -59,7 +59,7 @@ pub async fn run(args: OpenArgs) -> Result<()> {
 
     println!(
         "{} {}",
-        "[P2PM]".cyan().bold(),
+        "[p2pm]".cyan().bold(),
         format!("Opening {}...", path.display()).bold()
     );
 

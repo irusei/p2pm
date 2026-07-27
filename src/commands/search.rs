@@ -6,7 +6,7 @@ use colored::Colorize;
 pub async fn run(args: SearchArgs) -> Result<()> {
     println!(
         "{} {}",
-        "[P2PM]".cyan().bold(),
+        "[p2pm]".cyan().bold(),
         format!("Searching for '{}'...", args.query).bold()
     );
 
@@ -15,7 +15,7 @@ pub async fn run(args: SearchArgs) -> Result<()> {
     if results.is_empty() {
         println!(
             "{} {}",
-            "[P2PM]".cyan().bold(),
+            "[p2pm]".cyan().bold(),
             "No results found.".dimmed()
         );
         return Ok(());

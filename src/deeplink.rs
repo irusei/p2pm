@@ -68,7 +68,7 @@ pub fn register_deeplink_handler() -> Result<()> {
 
     println!(
         "{} {}",
-        "[P2PM]".cyan().bold(),
+        "[p2pm]".cyan().bold(),
         "Registered mws-pdmm:// deeplink handler".bold()
     );
     Ok(())

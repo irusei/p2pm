@@ -20,12 +20,12 @@ pub async fn run(args: UninstallArgs) -> Result<()> {
 
     println!(
         "{} {}",
-        "[P2PM]".cyan().bold(),
+        "[p2pm]".cyan().bold(),
         format!("Uninstalling {}...", args.name).bold()
     );
 
     storage::uninstall_package(repo_id, mod_id).await?;
 
-    println!("{} {}", "[P2PM]".cyan().bold(), "Done".green().bold());
+    println!("{} {}", "[p2pm]".cyan().bold(), "Done".green().bold());
     Ok(())
 }

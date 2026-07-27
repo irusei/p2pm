@@ -12,14 +12,14 @@ pub async fn fetch_zip(download_url: &str) -> Result<Bytes, P2PMError> {
     // fetch zip
     println!(
         "{} {}",
-        "[P2PM]".cyan().bold(),
+        "[p2pm]".cyan().bold(),
         format!("Downloading from {}", download_url).bold()
     );
     let zip_request = reqwest::get(download_url).await?;
     let zip_bytes = zip_request.bytes().await?;
     println!(
         "{} {}",
-        "[P2PM]".cyan().bold(),
+        "[p2pm]".cyan().bold(),
         format!("Downloaded {} bytes", zip_bytes.len()).bold()
     );
 
@@ -29,7 +29,7 @@ pub async fn fetch_zip(download_url: &str) -> Result<Bytes, P2PMError> {
 pub async fn install_package(package_id: &str) -> Result<(), P2PMError> {
     println!(
         "{} {}",
-        "[P2PM]".cyan().bold(),
+        "[p2pm]".cyan().bold(),
         format!("Parsing package ID '{}'", package_id).bold()
     );
 
@@ -48,7 +48,7 @@ pub async fn install_package(package_id: &str) -> Result<(), P2PMError> {
 
     println!(
         "{} {}",
-        "[P2PM]".cyan().bold(),
+        "[p2pm]".cyan().bold(),
         format!("Using repo: {}", repo_id).bold()
     );
 
@@ -56,7 +56,7 @@ pub async fn install_package(package_id: &str) -> Result<(), P2PMError> {
         mws::REPO_ID => {
             println!(
                 "{} {}",
-                "[P2PM]".cyan().bold(),
+                "[p2pm]".cyan().bold(),
                 "Fetching mod data from ModWorkshop".bold()
             );
             mws::fetch_package_data_and_download_url(&mod_id).await?
@@ -69,7 +69,7 @@ pub async fn install_package(package_id: &str) -> Result<(), P2PMError> {
         if version.eq(&package_data.version) {
             println!(
                 "{} {}",
-                "[P2PM]".cyan().bold(),
+                "[p2pm]".cyan().bold(),
                 format!(
                     "Version v{} of mod {} is already installed, skipping",
                     package_data.version, package_data.name
@@ -81,7 +81,7 @@ pub async fn install_package(package_id: &str) -> Result<(), P2PMError> {
     }
     println!(
         "{} {}",
-        "[P2PM]".cyan().bold(),
+        "[p2pm]".cyan().bold(),
         format!(
             "Downloading mod: {} v{}",
             package_data.name, package_data.version
@@ -100,7 +100,7 @@ pub async fn update_all() -> Result<(), P2PMError> {
 
     println!(
         "{} {}",
-        "[P2PM]".cyan().bold(),
+        "[p2pm]".cyan().bold(),
         "Checking for updates...".bold()
     );
 
@@ -115,7 +115,7 @@ pub async fn update_all() -> Result<(), P2PMError> {
         if latest_version == package.version {
             println!(
                 "{} {}",
-                "[P2PM]".cyan().bold(),
+                "[p2pm]".cyan().bold(),
                 format!("{} v{} is up to date", package.name, package.version).dimmed()
             );
             continue;
@@ -123,7 +123,7 @@ pub async fn update_all() -> Result<(), P2PMError> {
 
         println!(
             "{} {}",
-            "[P2PM]".cyan().bold(),
+            "[p2pm]".cyan().bold(),
             format!(
                 "Updating {} v{} -> v{}",
                 package.name, package.version, latest_version
@@ -138,13 +138,13 @@ pub async fn update_all() -> Result<(), P2PMError> {
     if updated > 0 {
         println!(
             "{} {}",
-            "[P2PM]".cyan().bold(),
+            "[p2pm]".cyan().bold(),
             format!("{} package(s) updated", updated).green().bold()
         );
     } else {
         println!(
             "{} {}",
-            "[P2PM]".cyan().bold(),
+            "[p2pm]".cyan().bold(),
             "All packages are up to date".green().bold()
         );
     }

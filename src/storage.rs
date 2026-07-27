@@ -231,13 +231,13 @@ pub async fn install_mod_from_zip(
 
     match pkg_type {
         P2PMPackageType::Mod => {
-            println!("{} {}", "[P2PM]".cyan().bold(), "Installing as mod".bold());
+            println!("{} {}", "[p2pm]".cyan().bold(), "Installing as mod".bold());
             install_as_mod(&game_root, &mod_data, &zip_bytes).await?;
         }
         P2PMPackageType::Override => {
             println!(
                 "{} {}",
-                "[P2PM]".cyan().bold(),
+                "[p2pm]".cyan().bold(),
                 "Installing as override".bold()
             );
             install_as_override(&game_root, &mod_data, &zip_bytes).await?;

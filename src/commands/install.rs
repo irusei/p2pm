@@ -6,12 +6,12 @@ use colored::Colorize;
 pub async fn run(args: InstallArgs) -> Result<()> {
     println!(
         "{} {}",
-        "[P2PM]".cyan().bold(),
+        "[p2pm]".cyan().bold(),
         format!("Installing '{}'", args.name).bold()
     );
 
     aggregator::install_package(&args.name).await?;
 
-    println!("{} {}", "[P2PM]".cyan().bold(), "Done".green().bold());
+    println!("{} {}", "[p2pm]".cyan().bold(), "Done".green().bold());
     Ok(())
 }

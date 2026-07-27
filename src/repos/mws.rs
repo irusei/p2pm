@@ -57,7 +57,7 @@ fn fix_semver_version(version: &str) -> Result<Version, semver::Error> {
 pub async fn fetch_files_from_mod_id(mod_id: &str) -> Result<Vec<MWSFile>, P2PMError> {
     println!(
         "{} {}",
-        "[P2PM]".cyan().bold(),
+        "[p2pm]".cyan().bold(),
         format!("Fetching file list from ModWorkshop (mod {})", mod_id).bold()
     );
     let mws_api_url = format!("https://api.modworkshop.net/mods/{}/files", mod_id);
@@ -76,7 +76,7 @@ pub async fn fetch_files_from_mod_id(mod_id: &str) -> Result<Vec<MWSFile>, P2PME
 
     println!(
         "{} {}",
-        "[P2PM]".cyan().bold(),
+        "[p2pm]".cyan().bold(),
         format!("Found {} file(s) for mod {}", json.data.len(), mod_id).bold()
     );
 
@@ -86,7 +86,7 @@ pub async fn fetch_files_from_mod_id(mod_id: &str) -> Result<Vec<MWSFile>, P2PME
 pub async fn fetch_mws_metadata(mod_id: String) -> Result<MWSMetadata, P2PMError> {
     println!(
         "{} {}",
-        "[P2PM]".cyan().bold(),
+        "[p2pm]".cyan().bold(),
         format!("Fetching metadata from ModWorkshop (mod {})", mod_id).bold()
     );
     let mws_api_url = format!("https://api.modworkshop.net/mods/{}", mod_id);
@@ -101,7 +101,7 @@ pub async fn fetch_mws_metadata(mod_id: String) -> Result<MWSMetadata, P2PMError
 
     println!(
         "{} {}",
-        "[P2PM]".cyan().bold(),
+        "[p2pm]".cyan().bold(),
         format!("Found metadata for mod {}", mod_id).bold()
     );
 
@@ -137,7 +137,7 @@ pub async fn fetch_package_data_and_download_url(
     let latest_file = latest_file.unwrap();
     println!(
         "{} {}",
-        "[P2PM]".cyan().bold(),
+        "[p2pm]".cyan().bold(),
         format!("Latest version: {}", latest_file.version).bold()
     );
 

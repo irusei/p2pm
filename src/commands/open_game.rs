@@ -5,7 +5,7 @@ use std::process::Command;
 pub async fn run() -> Result<()> {
     println!(
         "{} {}",
-        "[P2PM]".cyan().bold(),
+        "[p2pm]".cyan().bold(),
         "Launching PAYDAY 2...".bold()
     );
 
