@@ -15,7 +15,11 @@ pub fn get_mod_type(zip_bytes: &[u8]) -> P2PMPackageType {
         loop {
             match iter.next_header() {
                 Some(ArchiveContents::StartOfEntry(name, _)) => {
-                    if name.ends_with("/mod.txt") || name == "mod.txt" {
+                    if name.ends_with("/mod.txt")
+                        || name == "mod.txt"
+                        || name.ends_with("/main.xml")
+                        || name == "main.xml"
+                    {
                         return P2PMPackageType::Mod;
                     }
                 }
@@ -373,6 +377,9 @@ pub async fn install_as_mod(
             match iter.next_header() {
                 Some(ArchiveContents::StartOfEntry(name, _)) => {
                     if let Some(mod_root_folder) = name.strip_suffix("mod.txt") {
+                        base_folder = Some(mod_root_folder.to_string());
+                        break;
+                    } else if let Some(mod_root_folder) = name.strip_suffix("main.xml") {
                         base_folder = Some(mod_root_folder.to_string());
                         break;
                     }
