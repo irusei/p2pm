@@ -203,18 +203,11 @@ pub async fn uninstall_package(repo_id: &str, pkg_id: &str) -> Result<(), P2PMEr
     let content = fs::read_to_string(&json_path).await?;
     let mut installed: Vec<P2PMPackage> = serde_json::from_str(&content).unwrap_or_default();
 
-    // Get package name before removing
-    let mod_name = installed
+    let (mod_name, mod_type) = installed
         .iter()
         .find(|p| p.repo_id == repo_id && p.pkg_id == pkg_id)
-        .map(|p| p.name.clone())
-        .unwrap_or_default();
-
-    let mod_type = installed
-        .iter()
-        .find(|p| p.repo_id == repo_id && p.pkg_id == pkg_id)
-        .map(|p| p.pkg_type.clone())
-        .unwrap_or_else(|| P2PMPackageType::TBD);
+        .map(|p| (p.name.clone(), p.pkg_type.clone()))
+        .unwrap_or_else(|| (String::new(), P2PMPackageType::TBD));
 
     // Make sure it actually existed ig
     let original_len = installed.len();
