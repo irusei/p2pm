@@ -1,0 +1,467 @@
+use std::io::Cursor;
+use std::path::PathBuf;
+
+use bytes::Bytes;
+use color_eyre::owo_colors::OwoColorize;
+use compress_tools::{ArchiveContents, ArchiveIteratorBuilder};
+use semver::Version;
+use tokio::fs;
+
+use crate::{config, error::P2PMError, repos::aggregator};
+
+pub fn get_mod_type(zip_bytes: &[u8]) -> P2PMPackageType {
+    let cursor = Cursor::new(zip_bytes.to_vec());
+    if let Ok(mut iter) = ArchiveIteratorBuilder::new(cursor).build() {
+        loop {
+            match iter.next_header() {
+                Some(ArchiveContents::StartOfEntry(name, _)) => {
+                    if name.ends_with("/mod.txt") || name == "mod.txt" {
+                        return P2PMPackageType::Mod;
+                    }
+                }
+                Some(ArchiveContents::DataChunk(_)) => {}
+                Some(ArchiveContents::EndOfEntry) => {}
+                Some(ArchiveContents::Err(_)) | None => break,
+            }
+        }
+    }
+    P2PMPackageType::Override
+}
+
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+pub enum P2PMPackageType {
+    Mod,
+    Override,
+    TBD,
+}
+
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+pub struct P2PMPackage {
+    pub repo_id: String,
+    pub pkg_id: String,
+    pub name: String,
+    pub desc: String,
+    pub version: Version,
+    pub dependencies: Vec<String>,
+    pub pkg_type: P2PMPackageType,
+}
+
+pub async fn get_installed_version(
+    repo_id: &str,
+    pkg_id: &str,
+) -> Result<Option<Version>, P2PMError> {
+    let game_root = config::load_game_root()
+        .map_err(|e| P2PMError::Config(e.to_string()))?
+        .ok_or(P2PMError::GameRootNotSet)?;
+
+    let json_path = game_root.join("mods").join("p2pm_mods.json");
+
+    if !json_path.exists() {
+        return Ok(None);
+    }
+
+    let content = fs::read_to_string(&json_path).await?;
+    let installed: Vec<P2PMPackage> = serde_json::from_str(&content).unwrap_or_default();
+
+    for pkg in installed {
+        if pkg.repo_id == repo_id && pkg.pkg_id == pkg_id {
+            return Ok(Some(pkg.version));
+        }
+    }
+
+    Ok(None)
+}
+
+pub async fn get_all_installed_packages() -> Result<Vec<P2PMPackage>, P2PMError> {
+    let game_root = config::load_game_root()
+        .map_err(|e| P2PMError::Config(e.to_string()))?
+        .ok_or(P2PMError::GameRootNotSet)?;
+
+    let json_path = game_root.join("mods").join("p2pm_mods.json");
+
+    if !json_path.exists() {
+        return Ok(Vec::new());
+    }
+
+    let content = fs::read_to_string(&json_path).await?;
+    let installed: Vec<P2PMPackage> = serde_json::from_str(&content).unwrap_or_default();
+
+    Ok(installed)
+}
+
+pub async fn uninstall_package(repo_id: &str, pkg_id: &str) -> Result<(), P2PMError> {
+    let game_root = config::load_game_root()
+        .map_err(|e| P2PMError::Config(e.to_string()))?
+        .ok_or(P2PMError::GameRootNotSet)?;
+
+    let json_path = game_root.join("mods").join("p2pm_mods.json");
+
+    if !json_path.exists() {
+        return Err(P2PMError::NotFound(format!("{}/{}", repo_id, pkg_id)));
+    }
+
+    let content = fs::read_to_string(&json_path).await?;
+    let mut installed: Vec<P2PMPackage> = serde_json::from_str(&content).unwrap_or_default();
+
+    // Get package name before removing
+    let mod_name = installed
+        .iter()
+        .find(|p| p.repo_id == repo_id && p.pkg_id == pkg_id)
+        .map(|p| p.name.clone())
+        .unwrap_or_default();
+
+    let mod_type = installed
+        .iter()
+        .find(|p| p.repo_id == repo_id && p.pkg_id == pkg_id)
+        .map(|p| p.pkg_type.clone())
+        .unwrap_or_else(|| P2PMPackageType::TBD);
+
+    // Make sure it actually existed ig
+    let original_len = installed.len();
+    installed.retain(|p| !(p.repo_id == repo_id && p.pkg_id == pkg_id));
+
+    if installed.len() == original_len {
+        return Err(P2PMError::NotFound(format!("{}/{}", repo_id, pkg_id)));
+    }
+
+    // Write back
+    let content = serde_json::to_string_pretty(&installed)?;
+    fs::write(&json_path, content).await?;
+
+    // Remove mod files from game directory
+    let mod_name = sanitize_filename::sanitize(&mod_name);
+
+    match mod_type {
+        P2PMPackageType::Mod => {
+            let mut mods_path = game_root.clone();
+            mods_path.push("mods");
+            mods_path.push(&mod_name);
+            if mods_path.exists() {
+                fs::remove_dir_all(&mods_path).await?;
+            }
+        }
+        P2PMPackageType::Override => {
+            let mut overrides_path = game_root.clone();
+            overrides_path.push("assets");
+            overrides_path.push("mod_overrides");
+            overrides_path.push(&mod_name);
+            if overrides_path.exists() {
+                fs::remove_dir_all(&overrides_path).await?;
+            }
+        }
+        _ => {}
+    }
+
+    Ok(())
+}
+
+pub async fn save_installed_packages(
+    game_root: &PathBuf,
+    package: &P2PMPackage,
+) -> Result<(), P2PMError> {
+    let mut mods_path = game_root.clone();
+    mods_path.push("mods");
+    let json_path = mods_path.join("p2pm_mods.json");
+
+    // load existing packages or start empty
+    let mut installed: Vec<P2PMPackage> = if json_path.exists() {
+        let content = fs::read_to_string(&json_path).await?;
+        serde_json::from_str(&content).unwrap_or_default()
+    } else {
+        Vec::new()
+    };
+
+    // Check if package already exists, update if so
+    let mut found = false;
+    for item in installed.iter_mut() {
+        if item.repo_id == package.repo_id && item.pkg_id == package.pkg_id {
+            *item = package.clone();
+            found = true;
+            break;
+        }
+    }
+    if !found {
+        installed.push(package.clone());
+    }
+
+    // Write back
+    let content = serde_json::to_string_pretty(&installed)?;
+    fs::write(&json_path, content).await?;
+
+    Ok(())
+}
+
+async fn create_missing_paths(game_root: &PathBuf) -> Result<(), P2PMError> {
+    if !game_root.exists() {
+        return Err(P2PMError::GameRootNotSet);
+    }
+
+    let mut mod_overrides = game_root.clone();
+    mod_overrides.push("assets");
+    mod_overrides.push("mod_overrides");
+
+    fs::create_dir_all(&mod_overrides)
+        .await
+        .map_err(|_| P2PMError::Permission(mod_overrides.display().to_string()))?;
+
+    let mut mods_folder = game_root.clone();
+    mods_folder.push("mods");
+
+    fs::create_dir_all(&mods_folder)
+        .await
+        .map_err(|_| P2PMError::Permission(mods_folder.display().to_string()))?;
+
+    Ok(())
+}
+
+pub async fn install_mod_from_zip(
+    mod_data: P2PMPackage,
+    zip_bytes: Bytes,
+) -> Result<(), P2PMError> {
+    let game_root = config::load_game_root().unwrap().unwrap();
+    create_missing_paths(&game_root).await?;
+
+    // Resolve dependencies
+    // TODO: fix circular dependencies
+    for dependency in &mod_data.dependencies {
+        Box::pin(aggregator::install_package(&dependency)).await?;
+    }
+
+    let pkg_type = get_mod_type(&zip_bytes);
+
+    match pkg_type {
+        P2PMPackageType::Mod => {
+            println!("{} {}", "[P2PM]".cyan().bold(), "Installing as mod".bold());
+            install_as_mod(&game_root, &mod_data, &zip_bytes).await?;
+        }
+        P2PMPackageType::Override => {
+            println!(
+                "{} {}",
+                "[P2PM]".cyan().bold(),
+                "Installing as override".bold()
+            );
+            install_as_override(&game_root, &mod_data, &zip_bytes).await?;
+        }
+        _ => return Err(P2PMError::UnknownType(mod_data.name)), // this will never happen
+    }
+
+    // Save to p2pm_mods.json
+    let mut new_mod_data = mod_data.clone();
+    new_mod_data.pkg_type = pkg_type;
+
+    save_installed_packages(&game_root, &new_mod_data).await?;
+
+    Ok(())
+}
+
+pub async fn install_as_mod(
+    game_root: &PathBuf,
+    mod_data: &P2PMPackage,
+    zip_bytes: &Bytes,
+) -> Result<(), P2PMError> {
+    let mut mod_name_folder = game_root.clone();
+    mod_name_folder.push("mods");
+
+    // check if folder already exists
+    mod_name_folder.push(sanitize_filename::sanitize(&mod_data.name));
+
+    if mod_name_folder.exists() {
+        fs::remove_dir_all(&mod_name_folder).await?;
+    }
+
+    let mut base_folder: Option<String> = None;
+    let mod_locator_cursor = Cursor::new(zip_bytes.to_vec());
+
+    if let Ok(mut iter) = ArchiveIteratorBuilder::new(mod_locator_cursor).build() {
+        loop {
+            match iter.next_header() {
+                Some(ArchiveContents::StartOfEntry(name, _)) => {
+                    if let Some(mod_root_folder) = name.strip_suffix("mod.txt") {
+                        base_folder = Some(mod_root_folder.to_string());
+                        break;
+                    }
+                }
+                Some(ArchiveContents::DataChunk(_)) => {}
+                Some(ArchiveContents::EndOfEntry) => {}
+                Some(ArchiveContents::Err(_)) | None => break,
+            }
+        }
+    }
+
+    if let Some(base_folder) = base_folder {
+        let cursor = Cursor::new(zip_bytes.to_vec());
+        if let Ok(mut iter) = ArchiveIteratorBuilder::new(cursor).build() {
+            let mut dest_file_name: Option<String> = None;
+            let mut dest_chunk: Vec<u8> = vec![];
+
+            loop {
+                match iter.next() {
+                    Some(ArchiveContents::StartOfEntry(name, _)) => {
+                        if &base_folder != "" {
+                            if name.contains(&base_folder) && !name.ends_with("/") {
+                                let split_file_name = name.split(&base_folder).nth(1).unwrap();
+                                dest_file_name = Some(format!(
+                                    "{}/{}",
+                                    mod_name_folder.display(),
+                                    split_file_name
+                                ));
+                                println!(
+                                    "{} {}",
+                                    " ".repeat(8),
+                                    dest_file_name.clone().unwrap().dimmed()
+                                );
+                            }
+                        }
+                    }
+                    Some(ArchiveContents::DataChunk(chunk)) => {
+                        dest_chunk.extend_from_slice(&chunk);
+                    }
+                    Some(ArchiveContents::EndOfEntry) => {
+                        // only extract if dest_file_name is set
+                        if let Some(destination) = &dest_file_name {
+                            let path = PathBuf::from(destination);
+                            if let Some(parent) = path.parent() {
+                                if let Err(e) = fs::create_dir_all(parent).await {
+                                    println!(
+                                        "{} {}",
+                                        " ".repeat(36),
+                                        format!("Failed creating {}: {}", parent.display(), e)
+                                            .red()
+                                            .bold()
+                                    );
+                                    continue;
+                                }
+                            }
+
+                            match fs::write(&path, &dest_chunk).await {
+                                Ok(_) => {}
+                                Err(_) => {
+                                    println!(
+                                        "{} {}",
+                                        " ".repeat(36),
+                                        format!("IMPARTIAL WRITE: {}", &path.display())
+                                            .yellow()
+                                            .bold()
+                                    )
+                                }
+                            }
+
+                            dest_file_name = None;
+                            dest_chunk = vec![];
+                        }
+                    }
+                    Some(ArchiveContents::Err(_)) | None => break,
+                }
+            }
+        }
+    }
+    Ok(())
+}
+
+pub async fn install_as_override(
+    game_root: &PathBuf,
+    mod_data: &P2PMPackage,
+    zip_bytes: &Bytes,
+) -> Result<(), P2PMError> {
+    let override_asset_folders = vec![
+        "anims",
+        "core",
+        "effects",
+        "environments",
+        "fonts",
+        "gamedata",
+        "guis",
+        "levels",
+        "lib",
+        "movies",
+        "physic_effects",
+        "settings",
+        "shaders",
+        "soundbanks",
+        "strings",
+        "units",
+    ];
+
+    let mut mod_name_folder = game_root.clone();
+    mod_name_folder.push("assets");
+    mod_name_folder.push("mod_overrides");
+
+    // check if folder already exists
+    mod_name_folder.push(sanitize_filename::sanitize(&mod_data.name));
+
+    if mod_name_folder.exists() {
+        fs::remove_dir_all(&mod_name_folder).await?;
+    }
+
+    let cursor = Cursor::new(zip_bytes.to_vec());
+    if let Ok(mut iter) = ArchiveIteratorBuilder::new(cursor).build() {
+        let mut dest_file_name: Option<String> = None;
+        let mut dest_chunk: Vec<u8> = vec![];
+
+        loop {
+            match iter.next() {
+                Some(ArchiveContents::StartOfEntry(name, _)) => {
+                    // hate this :(
+                    for folder in &override_asset_folders {
+                        let asset_folder = &format!("/{}/", folder);
+                        if name.contains(asset_folder) && !name.ends_with("/") {
+                            let split_file_name = name.split(asset_folder).nth(1).unwrap();
+                            dest_file_name = Some(format!(
+                                "{}{}{}",
+                                mod_name_folder.display(),
+                                asset_folder,
+                                split_file_name
+                            ));
+                            println!(
+                                "{} {}",
+                                " ".repeat(8),
+                                dest_file_name.clone().unwrap().dimmed()
+                            );
+                            break;
+                        }
+                    }
+                }
+                Some(ArchiveContents::DataChunk(chunk)) => {
+                    dest_chunk.extend_from_slice(&chunk);
+                }
+                Some(ArchiveContents::EndOfEntry) => {
+                    // only extract if dest_file_name is set
+                    if let Some(destination) = &dest_file_name {
+                        let path = PathBuf::from(destination);
+                        if let Some(parent) = path.parent() {
+                            if let Err(e) = fs::create_dir_all(parent).await {
+                                println!(
+                                    "{} {}",
+                                    " ".repeat(36),
+                                    format!("Failed creating {}: {}", parent.display(), e)
+                                        .red()
+                                        .bold()
+                                );
+                                continue;
+                            }
+                        }
+
+                        match fs::write(&path, &dest_chunk).await {
+                            Ok(_) => {}
+                            Err(_) => {
+                                println!(
+                                    "{} {}",
+                                    " ".repeat(36),
+                                    format!("IMPARTIAL WRITE: {}", &path.display())
+                                        .yellow()
+                                        .bold()
+                                )
+                            }
+                        }
+
+                        dest_file_name = None;
+                        dest_chunk = vec![];
+                    }
+                }
+                Some(ArchiveContents::Err(_)) | None => break,
+            }
+        }
+    }
+
+    Ok(())
+}
