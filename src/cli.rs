@@ -22,6 +22,10 @@ pub enum Commands {
     List,
     /// Uninstall a mod
     Uninstall(UninstallArgs),
+    /// Open a mod folder
+    Open(OpenArgs),
+    /// Open the game
+    OpenGame,
     /// Handle mws-pdmm://deeplink
     Deeplink(DeeplinkArgs),
 }
@@ -58,5 +62,10 @@ pub struct DeeplinkArgs {
 
 #[derive(clap::Args)]
 pub struct UninstallArgs {
+    pub name: String,
+}
+
+#[derive(clap::Args)]
+pub struct OpenArgs {
     pub name: String,
 }

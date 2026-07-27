@@ -57,6 +57,14 @@ async fn main() -> Result<()> {
             require_game_root()?;
             commands::uninstall::run(cmd).await?
         }
+        cli::Commands::Open(cmd) => {
+            require_game_root()?;
+            commands::open::run(cmd).await?
+        }
+        cli::Commands::OpenGame => {
+            require_game_root()?;
+            commands::open_game::run().await?
+        }
         cli::Commands::Deeplink(cmd) => {
             let package_id = deeplink::parse_deeplink(&cmd.url)?;
             println!(
