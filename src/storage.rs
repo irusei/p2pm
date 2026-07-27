@@ -72,6 +72,73 @@ pub async fn get_installed_version(
     Ok(None)
 }
 
+#[derive(Debug, Clone)]
+pub struct UntrackedMod {
+    pub name: String,
+    pub path: PathBuf,
+    pub mod_type: P2PMPackageType,
+}
+
+pub async fn get_untracked_mods() -> Result<Vec<UntrackedMod>, P2PMError> {
+    let game_root = config::load_game_root()
+        .map_err(|e| P2PMError::Config(e.to_string()))?
+        .ok_or(P2PMError::GameRootNotSet)?;
+
+    let installed = get_all_installed_packages().await?;
+    let tracked_names: std::collections::HashSet<String> = installed
+        .iter()
+        .map(|p| sanitize_filename::sanitize(&p.name))
+        .collect();
+
+    let mut untracked: Vec<UntrackedMod> = Vec::new();
+
+    // Scan mods folder
+    let mods_path = game_root.join("mods");
+    if mods_path.is_dir() {
+        let mut entries = fs::read_dir(&mods_path).await.ok();
+        while let Some(ref mut entries) = entries {
+            if let Some(entry) = entries.next_entry().await.ok().flatten() {
+                let name = entry.file_name().to_string_lossy().to_string();
+                let path = entry.path();
+                if path.is_dir() && !tracked_names.contains(&name) && name != "base" {
+                    if path.join("mod.txt").exists() {
+                        untracked.push(UntrackedMod {
+                            name,
+                            path,
+                            mod_type: P2PMPackageType::Mod,
+                        });
+                    }
+                }
+            } else {
+                break;
+            }
+        }
+    }
+
+    // Scan mod_overrides folder
+    let overrides_path = game_root.join("assets").join("mod_overrides");
+    if overrides_path.is_dir() {
+        let mut entries = fs::read_dir(&overrides_path).await.ok();
+        while let Some(ref mut entries) = entries {
+            if let Some(entry) = entries.next_entry().await.ok().flatten() {
+                let name = entry.file_name().to_string_lossy().to_string();
+                let path = entry.path();
+                if path.is_dir() && !tracked_names.contains(&name) {
+                    untracked.push(UntrackedMod {
+                        name,
+                        path,
+                        mod_type: P2PMPackageType::Override,
+                    });
+                }
+            } else {
+                break;
+            }
+        }
+    }
+
+    Ok(untracked)
+}
+
 pub async fn get_all_installed_packages() -> Result<Vec<P2PMPackage>, P2PMError> {
     let game_root = config::load_game_root()
         .map_err(|e| P2PMError::Config(e.to_string()))?

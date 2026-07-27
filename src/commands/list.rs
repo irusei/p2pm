@@ -1,58 +1,10 @@
-use crate::config;
 use crate::error::Result;
 use crate::storage;
 use colored::Colorize;
-use tokio::fs;
 
 pub async fn run() -> Result<()> {
     let installed = storage::get_all_installed_packages().await?;
-    let game_root = config::load_game_root().ok().flatten();
-
-    let tracked_names: std::collections::HashSet<String> = installed
-        .iter()
-        .map(|p| sanitize_filename::sanitize(&p.name))
-        .collect();
-
-    // scan for untracked mods
-    let mut untracked: Vec<String> = Vec::new();
-    if let Some(ref root) = game_root {
-        // Scan mods folder
-        let mods_path = root.join("mods");
-        if mods_path.is_dir() {
-            let mut entries = fs::read_dir(&mods_path).await.ok();
-            while let Some(ref mut entries) = entries {
-                if let Some(entry) = entries.next_entry().await.ok().flatten() {
-                    let name = entry.file_name().to_string_lossy().to_string();
-                    let path = entry.path();
-                    if path.is_dir() && !tracked_names.contains(&name) && name != "base" {
-                        // Check if it has mod.txt
-                        if path.join("mod.txt").exists() {
-                            untracked.push(name);
-                        }
-                    }
-                } else {
-                    break;
-                }
-            }
-        }
-
-        // Scan mod_overrides folder
-        let overrides_path = root.join("assets").join("mod_overrides");
-        if overrides_path.is_dir() {
-            let mut entries = fs::read_dir(&overrides_path).await.ok();
-            while let Some(ref mut entries) = entries {
-                if let Some(entry) = entries.next_entry().await.ok().flatten() {
-                    let name = entry.file_name().to_string_lossy().to_string();
-                    let path = entry.path();
-                    if path.is_dir() && !tracked_names.contains(&name) {
-                        untracked.push(name);
-                    }
-                } else {
-                    break;
-                }
-            }
-        }
-    }
+    let untracked = storage::get_untracked_mods().await?;
 
     if installed.is_empty() && untracked.is_empty() {
         println!(
@@ -102,8 +54,18 @@ pub async fn run() -> Result<()> {
 
     if !untracked.is_empty() {
         println!("{}", "Untracked (not managed by p2pm):".bold().yellow());
-        for name in &untracked {
-            println!("{}  {}", "-".yellow(), name.bold());
+        for mod_info in &untracked {
+            let type_str = match mod_info.mod_type {
+                storage::P2PMPackageType::Mod => "mod",
+                storage::P2PMPackageType::Override => "override",
+                _ => "unknown",
+            };
+            println!(
+                "{}  {} [{}]",
+                "-".yellow(),
+                mod_info.name.bold(),
+                type_str.dimmed()
+            );
         }
         println!();
     }
