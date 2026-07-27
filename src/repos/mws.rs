@@ -28,6 +28,7 @@ pub struct MWSMetadata {
 #[derive(Clone, Deserialize)]
 pub struct MWSDependency {
     mod_id: Option<u32>,
+    optional: bool,
 }
 
 #[derive(Clone, Deserialize)]
@@ -158,6 +159,7 @@ async fn construct_p2pm_package(file: &MWSFile) -> Result<P2PMPackage, P2PMError
         dependencies: metadata
             .dependencies
             .iter()
+            .filter(|dependency| !dependency.optional)
             .filter_map(|dependency| dependency.mod_id.map(|id| format!("{}/{}", REPO_ID, id)))
             .collect(),
         pkg_type: crate::storage::P2PMPackageType::TBD,
