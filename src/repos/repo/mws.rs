@@ -2,7 +2,11 @@ use colored::Colorize;
 use semver::Version;
 use serde::Deserialize;
 
-use crate::{error::P2PMError, storage::P2PMPackage};
+use crate::{
+    error::P2PMError,
+    repos::{repo::SearchEntry, version_utils},
+    storage::P2PMPackage,
+};
 
 pub const REPO_ID: &str = "mws";
 
@@ -31,7 +35,7 @@ pub struct MWSDependency {
     optional: bool,
 }
 
-#[derive(Clone, Deserialize)]
+#[derive(Deserialize)]
 pub struct MWSSearchEntry {
     pub id: u32,
     pub name: String,
@@ -41,18 +45,6 @@ pub struct MWSSearchEntry {
 #[derive(Deserialize)]
 pub struct MWSSearchResponse {
     data: Vec<MWSSearchEntry>,
-}
-
-fn fix_semver_version(version: &str) -> Result<Version, semver::Error> {
-    let cleaned = version.trim_start_matches('v');
-
-    let mut parts: Vec<&str> = cleaned.split('.').collect();
-
-    while parts.len() < 3 {
-        parts.push("0");
-    }
-
-    Version::parse(&parts.join("."))
 }
 
 pub async fn fetch_files_from_mod_id(mod_id: &str) -> Result<Vec<MWSFile>, P2PMError> {
@@ -118,9 +110,12 @@ pub fn get_latest_file_from_files(files: &Vec<MWSFile>) -> Option<MWSFile> {
     files
         .iter()
         .max_by(|a, b| {
-            fix_semver_version(&a.version)
+            version_utils::fix_semver_version(&a.version)
                 .unwrap_or_else(|_| Version::new(0, 0, 0))
-                .cmp(&fix_semver_version(&b.version).unwrap_or_else(|_| Version::new(0, 0, 0)))
+                .cmp(
+                    &version_utils::fix_semver_version(&b.version)
+                        .unwrap_or_else(|_| Version::new(0, 0, 0)),
+                )
         })
         .map(|f| f.clone())
 }
@@ -155,7 +150,8 @@ async fn construct_p2pm_package(file: &MWSFile) -> Result<P2PMPackage, P2PMError
         pkg_id: file.mod_id.to_string(),
         name: metadata.name.clone(),
         desc: metadata.desc.clone(),
-        version: fix_semver_version(&file.version).unwrap_or_else(|_| Version::new(0, 0, 0)),
+        version: version_utils::fix_semver_version(&file.version)
+            .unwrap_or_else(|_| Version::new(0, 0, 0)),
         dependencies: metadata
             .dependencies
             .iter()
@@ -174,10 +170,13 @@ pub async fn get_latest_version(mod_id: &str) -> Result<Version, P2PMError> {
         return Err(P2PMError::NoDownloadsFound(mod_id.to_string()));
     }
 
-    Ok(fix_semver_version(&latest_file.unwrap().version).unwrap_or_else(|_| Version::new(0, 0, 0)))
+    Ok(
+        version_utils::fix_semver_version(&latest_file.unwrap().version)
+            .unwrap_or_else(|_| Version::new(0, 0, 0)),
+    )
 }
 
-pub async fn search_mods(query: &str, limit: usize) -> Result<Vec<MWSSearchEntry>, P2PMError> {
+pub async fn search_mods(query: &str, limit: usize) -> Result<Vec<SearchEntry>, P2PMError> {
     let api_url = "https://api.modworkshop.net/games/1/mods";
 
     let response = reqwest::Client::new()
@@ -200,8 +199,8 @@ pub async fn search_mods(query: &str, limit: usize) -> Result<Vec<MWSSearchEntry
     let results = json
         .data
         .into_iter()
-        .map(|entry| MWSSearchEntry {
-            id: entry.id,
+        .map(|entry| SearchEntry {
+            id: format!("{}/{}", REPO_ID, entry.id),
             name: entry.name,
             desc: entry.desc,
         })

@@ -4,9 +4,11 @@ use semver::Version;
 
 use crate::{
     error::P2PMError,
-    repos::mws::{self},
+    repos::repo::{mws, z77},
     storage,
 };
+
+pub use super::repo::SearchEntry;
 
 pub async fn fetch_zip(download_url: &str) -> Result<Bytes, P2PMError> {
     // fetch zip
@@ -61,6 +63,14 @@ pub async fn install_package(package_id: &str) -> Result<(), P2PMError> {
             );
             mws::fetch_package_data_and_download_url(&mod_id).await?
         }
+        z77::REPO_ID => {
+            println!(
+                "{} {}",
+                "[p2pm]".cyan().bold(),
+                "Fetching mod data from Z77".bold()
+            );
+            z77::fetch_package_data_and_download_url(&mod_id).await?
+        }
         _ => return Err(P2PMError::RepoNotFound(repo_id.to_string())),
     };
 
@@ -109,6 +119,7 @@ pub async fn update_all() -> Result<(), P2PMError> {
     for package in installed {
         let latest_version = match package.repo_id.as_str() {
             mws::REPO_ID => mws::get_latest_version(&package.pkg_id).await?,
+            z77::REPO_ID => z77::get_latest_version(&package.pkg_id).await?,
             _ => Version::new(0, 0, 0),
         };
 
@@ -150,4 +161,12 @@ pub async fn update_all() -> Result<(), P2PMError> {
     }
 
     Ok(())
+}
+
+pub async fn search_mods(query: &str, limit: usize) -> Result<Vec<SearchEntry>, P2PMError> {
+    let mut results = mws::search_mods(&query, limit).await?;
+    let z77_results = z77::search_mods(&query, limit)?;
+
+    results.extend(z77_results);
+    Ok(results)
 }

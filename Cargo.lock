@@ -954,11 +954,13 @@ dependencies = [
  "colored",
  "compress-tools",
  "dirs",
+ "regex",
  "reqwest",
  "sanitize-filename",
  "semver",
  "serde",
  "serde_json",
+ "strsim",
  "thiserror",
  "tokio",
 ]

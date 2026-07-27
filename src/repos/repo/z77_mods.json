@@ -1,0 +1,376 @@
+[
+  {
+    "id": "alphasort-mods",
+    "name": "Alphasort Mods",
+    "desc": "sorts mods using alphabetical order instead of loading priority.",
+    "download_url": "https://pd2mods.z77.fr/update/AlphasortMods.zip",
+    "dependencies": []
+  },
+  {
+    "id": "anticrash",
+    "name": "Anticrash",
+    "desc": "This mod protects against most crashes due to network lag or malicious players. The generic part of the mod only handles Lua errors, so it's still possible to crash. To prevent less straightforward crashes from happening, specific code will have to be added. The blueprints of other players' weapons are reconstructed to ensure that no parts are missing. Ill-formed characters are searched in game chat, mods list and nicknames. Depending on the origin of the call, you can define what action to do: Please note that the origin of the call leading to a crash may differ with the cause of the crash itself. So don't jump to conclusions: a local error in your own mods could very well result in a misleading message. Possible values are: The chat option sends a message only to you. It mentions the origin of the call (corresponding to item names listed in options menu) and peer's name if available. More information about a prevented crash can be found in BLT logs. Generic protection writes a callstack and received values, but cases handled manually may differ.",
+    "download_url": "https://pd2mods.z77.fr/update/Anticrash.zip",
+    "dependencies": []
+  },
+  {
+    "id": "bag-contour",
+    "name": "Bag Contour",
+    "desc": "customizes bag outlines as you wish.",
+    "download_url": "https://pd2mods.z77.fr/update/BagContour.zip",
+    "dependencies": []
+  },
+  {
+    "id": "boing",
+    "name": "Boing",
+    "desc": "This mod adds fun and madness. A word of warning: it might be difficult to answer a pager during stealth ;) Adjust the effects to your liking from the options menu:",
+    "download_url": "https://pd2mods.z77.fr/update/Boing.zip",
+    "dependencies": []
+  },
+  {
+    "id": "buildb",
+    "name": "BuilDB",
+    "desc": "This mod is a build manager that uses pd2builder and pd2skills URL format. It adds 5 buttons at the bottom of the skills window: The builds menu above is generated from file mods/saves/buildb_builds.txt , which contains: # Keep the UTF-8 encoding of this file or some characters may not appear correctly in the game! # Only lines matching the format \"URL + 1 tabulation + build title\" # will be listed in the import menu. https://pd2builder.netlify.app/?s=d0-7410-4100100d0-710 Build Example You can describe your build more precisely without interfering with the menu. The first 2 lines are displayed above the list. So this line won't appear. https://pd2builder.netlify.app/?s=d0-7410-4100100d0-710 Build Example 2 blu https://pd2builder.netlify.app/?s=d0-7410-4100100d0-710 Build Example 3 DB file editing Editing your builds file in game is made possible thanks to quick_keyboard_input.insert_link(); :",
+    "download_url": "https://pd2mods.z77.fr/update/BuilDB.zip",
+    "dependencies": ["z77/quick-keyboard-input"]
+  },
+  {
+    "id": "celer",
+    "name": "Celer",
+    "desc": "This mod improves frame rate, mainly by adding portals and occluders. It does NOT alter visual quality. No textures are changed. Additionally, it features an improved occlusion manager and faster portals processing. Using Perfometer , here is a comparison of 2 equivalent playthroughs on Hell's Island : Note that performances increase may vary depending on which map is played and tested location.",
+    "download_url": "https://pd2mods.z77.fr/update/Celer.zip",
+    "dependencies": []
+  },
+  {
+    "id": "clear-texture-cache",
+    "name": "Clear Texture Cache",
+    "desc": "frees memory resources once heist is loaded.",
+    "download_url": "https://pd2mods.z77.fr/update/ClearTextureCache.zip",
+    "dependencies": []
+  },
+  {
+    "id": "civilian-marker-for-dropins",
+    "name": "Civilian ! Marker for Drop-ins",
+    "desc": "fixes exclamation mark on alerted civilians.",
+    "download_url": "https://pd2mods.z77.fr/update/CivilianMarkerForDropins.zip",
+    "dependencies": []
+  },
+  {
+    "id": "crew-ability-pied-piper",
+    "name": "Crew Ability: Pied Piper",
+    "desc": "adds a henchmen ability named Pied Piper which allows players to move multiple hostages simultaneously.",
+    "download_url": "https://pd2mods.z77.fr/update/CrewAbilityPiedPiper.zip",
+    "dependencies": []
+  },
+  {
+    "id": "crew-ability-pockets",
+    "name": "Crew Ability: Pockets",
+    "desc": "adds a henchmen ability named Pockets which allows NPC teammates to carry special items.",
+    "download_url": "https://pd2mods.z77.fr/update/CrewAbilityPockets.zip",
+    "dependencies": []
+  },
+  {
+    "id": "crew-ability-spotter",
+    "name": "Crew Ability: Spotter",
+    "desc": "adds a henchmen ability named Spotter which allows NPC teammates to mark guards during stealth gameplay.",
+    "download_url": "https://pd2mods.z77.fr/update/CrewAbilitySpotter.zip",
+    "dependencies": [
+      "z77/keepers",
+      "z77/goonmod-custom-waypoints",
+      "z77/iter",
+      "z77/no-duplicated-bullets"
+    ]
+  },
+  {
+    "id": "crewfiles",
+    "name": "Crewfiles",
+    "desc": "This mod improves henchmen settings management over multiple profiles. To ease management, a player profile can use henchmen settings of another player profile. So sharing by theme (like armor/dodge/stealth/etc) is possible. If a weapon used by a bot is moved in player inventory, it will invalidate henchmen settings. To keep track of weapon moves and update everything accordingly, drag_and_drop_inventory.insert_link(); is required.",
+    "download_url": "https://pd2mods.z77.fr/update/Crewfiles.zip",
+    "dependencies": []
+  },
+  {
+    "id": "drag-and-drop-inventory",
+    "name": "Drag and Drop Inventory",
+    "desc": "helps to manage your inventory by easily moving items or pages.",
+    "download_url": "https://pd2mods.z77.fr/update/DragDropInventory.zip",
+    "dependencies": []
+  },
+  {
+    "id": "enhanced-hitmarkers",
+    "name": "Enhanced Hitmarkers",
+    "desc": "customizes hitmarkers as you wish.",
+    "download_url": "https://pd2mods.z77.fr/update/EnhancedHitmarkers.zip",
+    "dependencies": []
+  },
+  {
+    "id": "fading-contour",
+    "name": "Fading Contour",
+    "desc": "makes outlines to dissipate gradually.",
+    "download_url": "https://pd2mods.z77.fr/update/FadingContour.zip",
+    "dependencies": []
+  },
+  {
+    "id": "filtered-camera-beeps",
+    "name": "Filtered Camera Beeps",
+    "desc": "makes stealth gameplay less stressful by silencing beeps that concern other players.",
+    "download_url": "https://pd2mods.z77.fr/update/FilteredCameraBeeps.zip",
+    "dependencies": []
+  },
+  {
+    "id": "fix-crime-spree-concealment-modifier",
+    "name": "Fix Crime Spree Concealment Modifier",
+    "desc": "ensures a stealth only modifier only affects stealth gameplay as stated in its description.",
+    "download_url": "https://pd2mods.z77.fr/update/FixCrimeSpreeConcealmentModifier.zip",
+    "dependencies": []
+  },
+  {
+    "id": "flashing-swan-song",
+    "name": "Flashing Swan Song",
+    "desc": "visually tells when another player is in swan song mode.",
+    "download_url": "https://pd2mods.z77.fr/update/FlashingSwanSong.zip",
+    "dependencies": []
+  },
+  {
+    "id": "full-speed-swarm",
+    "name": "Full Speed Swarm",
+    "desc": "improves general performance and fixes numerous bugs.",
+    "download_url": "https://pd2mods.z77.fr/update/FullSpeedSwarm.zip",
+    "dependencies": []
+  },
+  {
+    "id": "goonmod-custom-waypoints",
+    "name": "GoonMod's Custom Waypoints",
+    "desc": "Allows players to create their own waypoints.",
+    "download_url": "https://pd2mods.z77.fr/update/GoonmodCustomWaypoints.zip",
+    "dependencies": []
+  },
+  {
+    "id": "iter",
+    "name": "Iter",
+    "desc": "This mod improves navigation of all NPCs and fixes various map issues. This is the kind of joke that base game is able to pull off: Those links, represented by red cones below, are guides for special animations (jump, climb, rappel, etc). Once his animation is complete, a character will walk to where the cone is pointing, even if it's far from where the animation ended, thus the detour problem. A segmented path slows NPCs down and Iter's path extender removes this pause at each step: By default, this feature is only applied to friendly NPCs. Cops may benefit from it if you explicitly enable the full_speed_swarm.insert_link(); 's option named Improved chase . Map fixes Note that all patches related to performances have been moved into celer.insert_link(); . Special thanks to Malidictus for all the quality input and testing he provided.",
+    "download_url": "https://pd2mods.z77.fr/update/Iter.zip",
+    "dependencies": []
+  },
+  {
+    "id": "keep-it-clean",
+    "name": "Keep It Clean!",
+    "desc": "adds more pressure on those who kill civilians.",
+    "download_url": "https://pd2mods.z77.fr/update/KeepItClean.zip",
+    "dependencies": []
+  },
+  {
+    "id": "keepers",
+    "name": "Keepers",
+    "desc": "This mod lets you issue various types of order to your NPC teammates, including jokers. Bots can be controlled while in stealth: host (and only him) can wake up a NPC teammate by calling him with the secondary interaction Stop AI key. By default, you must hold that key for 0.5 sec to prevent waking up a bot by mistake but you can turn this delay off in the options menu. On top of iter.insert_link(); 's improvements, bots won't be distracted as much as usual when you're in a dire situation, giving medical emergencies more chances to succeed: They can be identified by the icon on the left of a character's name. Bots won't move at all, even if under heavy fire, and will take back their positions if pushed away. In this mode, they'll crouch down to reload . Bots will keep their position but if they take too much damage, they'll withdraw for a moment and go back once their health has regenerated. So a bot placed near a good cover can hold his position for a long time, place 2 of them and no one will pass. Bots will go from a random cover to another in the navigation segment they're assigned to. Size of navsegs can vary greatly, it's usually between 5 and 30 meters. This feature is limited to actions that don't require equipment. It relies heavily on custom waypoints and taking a good look at GCW's options is advised, specifically how to use previous/next waypoint controls. Will a bot stay where he's interacted? That depends if you keep or remove your waypoint from the object. To prevent abuse, this feature comes with a counterparty. Damage received and health regeneration are handled differently to make bots vulnerable to large squads while still remaining strong enough to take on small ones. These changes only apply to game modes that can have interactions (so not Holdout): the away timer of health regeneration is replaced by the nearby timer (longer), they define the amount of time without being hurt that is required to be healed; health is not fully restored all at once, it comes back by small chunks (see table below); grace period is decreased from 0.35 sec down to 0.05 sec (except for SWAT van turrets where the original value is kept). Depending on which options are enabled and the type of objective, the amount of healing will differ. This table shows the percentage that a bot receives each time the regenerate event occurs. Depending on who is going to be saved, icon colour of a bot having a revive objective can be red (you) or white (someone else) . If a character is downed less than 20 meters away, all fixed bots in range will put their current task on hold and come to help clear the place. Then they'll go back to whatever they were doing. Bots can be ordered to hunt a cop who has stolen a loot bag and get it back. This makes good use of monkeepers.insert_link(); when multiple bags are involved. To assign precise positions: place a mark, shout at a bot, and he'll go where the mark is. You can give a name to your jokers, so identifying your jokers from other players' jokers will be easy. Filter shouts influence only primary interaction, ie the \"shout/interact\" control. Setting it to \"all\" can be handy if you spam that control to mark cops: you won't mess with bots' assignments. If you want to go further regarding jokers modding, Hoppip the Shiny has made some cool stuff so check out his website .",
+    "download_url": "https://pd2mods.z77.fr/update/Keepers.zip",
+    "dependencies": [
+      "z77/goonmod-custom-waypoints",
+      "z77/iter",
+      "z77/no-duplicated-bullets"
+    ]
+  },
+  {
+    "id": "less-inaccurate-weapon-laser",
+    "name": "Less Inaccurate Weapon Laser",
+    "desc": "makes laser to point closer to where bullets go.",
+    "download_url": "https://pd2mods.z77.fr/update/LessInaccurateWeaponLaser.zip",
+    "dependencies": []
+  },
+  {
+    "id": "lobby-player-info",
+    "name": "Lobby Player Info",
+    "desc": "displays information about players in lobby and loadout screens.",
+    "download_url": "https://pd2mods.z77.fr/update/LobbyPlayerInfo.zip",
+    "dependencies": []
+  },
+  {
+    "id": "lobby-settings",
+    "name": "Lobby Settings",
+    "desc": "adds access limiters and remembers your settings.",
+    "download_url": "https://pd2mods.z77.fr/update/LobbySettings.zip",
+    "dependencies": []
+  },
+  {
+    "id": "make-technician-great-again",
+    "name": "Make Technician Great Again!",
+    "desc": "extends a technician skill to be able to deal with bulldozers stylishly.",
+    "download_url": "https://pd2mods.z77.fr/update/MakeTechnicianGreatAgain.zip",
+    "dependencies": []
+  },
+  {
+    "id": "marking",
+    "name": "Marking",
+    "desc": "This mod changes various things in the marking system. All features can be toggle on or off in options menu:",
+    "download_url": "https://pd2mods.z77.fr/update/Marking.zip",
+    "dependencies": []
+  },
+  {
+    "id": "monkeepers",
+    "name": "Monkeepers",
+    "desc": "This mod makes NPC teammates carry bags like players show them. Basically, it remembers the position where you take a bag. Then, if you drop that bag at least 7 meters from there (the important position is not yours but where your bag lands), it creates a transport rule that associates source position with where and how to throw bags. A transport rule is applied to all bags in a radius of 6 meters around the source position. If the source area is empty for 90 seconds, the rule is destroyed. Most of the time, you don't need to actively think about routes. Just play as usual, everything is automatic. In stealth, if you want to put NPC teammates to contribution, you'll need keepers.insert_link(); to wake them up. Then, you can set up a simple route and feed it with bags: Or make full use of Keepers' features and let your NPC teammates do most of the dirty work: You can define how bags are managed per heist. There are 4 ways: Finally, if things seem out of control, host can call a full reset through a custom keybind: all transport rules are deleted and carry objectives interrupted immediately.",
+    "download_url": "https://pd2mods.z77.fr/update/Monkeepers.zip",
+    "dependencies": []
+  },
+  {
+    "id": "more-weapon-stats",
+    "name": "More Weapon Stats",
+    "desc": "provides more details about weapons like accurate reload times, ammo pickup and damage breakpoints.",
+    "download_url": "https://pd2mods.z77.fr/update/MoreWeaponStats.zip",
+    "dependencies": []
+  },
+  {
+    "id": "moveable-intimidated-cop",
+    "name": "Moveable Intimidated Cop",
+    "desc": "adds the ability to move a surrendered cop.",
+    "download_url": "https://pd2mods.z77.fr/update/MoveableIntimidatedCop.zip",
+    "dependencies": [
+      "z77/fading-contour",
+      "z77/goonmod-custom-waypoints",
+      "z77/iter"
+    ]
+  },
+  {
+    "id": "mr-dr-fantastic",
+    "name": "Mr Dr Fantastic!",
+    "desc": "helps to centralize clues during day 2 of the Big Oil heist.",
+    "download_url": "https://pd2mods.z77.fr/update/MrDrFantastic.zip",
+    "dependencies": []
+  },
+  {
+    "id": "no-armor-color-grading",
+    "name": "No Armor Color Grading",
+    "desc": "changes the color grading when your armor is depleted.",
+    "download_url": "https://pd2mods.z77.fr/update/NoArmorColorGrading.zip",
+    "dependencies": []
+  },
+  {
+    "id": "no-duplicated-bullets",
+    "name": "No Duplicated Bullets",
+    "desc": "fixes a few synchronization issues (client-side only).",
+    "download_url": "https://pd2mods.z77.fr/update/NoDuplicatedBullets.zip",
+    "dependencies": []
+  },
+  {
+    "id": "no-mutants-allowed",
+    "name": "No Mutants Allowed",
+    "desc": "detects cheats.",
+    "download_url": "https://pd2mods.z77.fr/update/NoMutantsAllowed.zip",
+    "dependencies": ["z77/more-weapon-stats"]
+  },
+  {
+    "id": "pager-contour",
+    "name": "Pager Contour",
+    "desc": "lets no doubt about what pager is answered by other players.",
+    "download_url": "https://pd2mods.z77.fr/update/PagerContour.zip",
+    "dependencies": []
+  },
+  {
+    "id": "please-go-there",
+    "name": "Please, Go There",
+    "desc": "extends behaviour of civilians and gives more control to direct them.",
+    "download_url": "https://pd2mods.z77.fr/update/PleaseGoThere.zip",
+    "dependencies": [
+      "z77/fading-contour",
+      "z77/goonmod-custom-waypoints",
+      "z77/iter"
+    ]
+  },
+  {
+    "id": "quick-keyboard-input",
+    "name": "QuickKeyboardInput",
+    "desc": "adds components to get text input from player.",
+    "download_url": "https://pd2mods.z77.fr/update/QuickKeyboardInput.zip",
+    "dependencies": []
+  },
+  {
+    "id": "refresh-rate-checker",
+    "name": "Refresh Rate Checker",
+    "desc": "verifies if there are better settings for your monitor.",
+    "download_url": "https://pd2mods.z77.fr/update/RefreshRateChecker.zip",
+    "dependencies": []
+  },
+  {
+    "id": "reload-then-run",
+    "name": "Reload Then Run",
+    "desc": "prevents you to cancel reloading by running too early.",
+    "download_url": "https://pd2mods.z77.fr/update/ReloadThenRun.zip",
+    "dependencies": []
+  },
+  {
+    "id": "rename-inventory-pages",
+    "name": "Rename Inventory Pages",
+    "desc": "does what its name suggests.",
+    "download_url": "https://pd2mods.z77.fr/update/RenameInventoryPages.zip",
+    "dependencies": ["z77/quick-keyboard-input"]
+  },
+  {
+    "id": "restructured-menus",
+    "name": "Restructured Menus",
+    "desc": "adds, moves and removes a few menu items.",
+    "download_url": "https://pd2mods.z77.fr/update/RestructuredMenus.zip",
+    "dependencies": []
+  },
+  {
+    "id": "saw-helper",
+    "name": "Saw Helper",
+    "desc": "provides visual assistance regarding sawable things.",
+    "download_url": "https://pd2mods.z77.fr/update/SawHelper.zip",
+    "dependencies": []
+  },
+  {
+    "id": "search-inventory",
+    "name": "Search Inventory",
+    "desc": "highlights items matching your keywords.",
+    "download_url": "https://pd2mods.z77.fr/update/SearchInventory.zip",
+    "dependencies": ["z77/quick-keyboard-input"]
+  },
+  {
+    "id": "sentry-health-display",
+    "name": "Sentry Health Display",
+    "desc": "displays health level and ammo.",
+    "download_url": "https://pd2mods.z77.fr/update/SentryHealthDisplay.zip",
+    "dependencies": []
+  },
+  {
+    "id": "simple-mod-updater",
+    "name": "Simple Mod Updater",
+    "desc": "downloads and installs mod updates automatically.",
+    "download_url": "https://pd2mods.z77.fr/update/SimpleModUpdater.zip",
+    "dependencies": []
+  },
+  {
+    "id": "switch-underbarrel-in-steelsight",
+    "name": "Switch Underbarrel In Steelsight",
+    "desc": "lets you handle the \"Little Friend\" more easily.",
+    "download_url": "https://pd2mods.z77.fr/update/SwitchUnderbarrelInSteelsight.zip",
+    "dependencies": []
+  },
+  {
+    "id": "t-pack",
+    "name": "T-PACK",
+    "desc": "This special mod regroups all my other mods through dependencies. Its only purpose is to get new mods as soon as they come out. Dependency links require simple_mod_updater.insert_link(); to be taken into account, which can be quickly installed by clicking on T-PACK's notification in the main menu. It currently includes:",
+    "download_url": "https://pd2mods.z77.fr/update/TPACK.zip",
+    "dependencies": []
+  },
+  {
+    "id": "use-perk-device-in-vehicle",
+    "name": "Use Perk Device In Vehicle",
+    "desc": "allows the use of pocket ECM/hip flask/etc inside a vehicle.",
+    "download_url": "https://pd2mods.z77.fr/update/UsePerkDeviceInVehicle.zip",
+    "dependencies": []
+  },
+  {
+    "id": "yet-another-flashlight",
+    "name": "Yet Another Flashlight",
+    "desc": "grants a clearer and slightly more powerful flashlight.",
+    "download_url": "https://pd2mods.z77.fr/update/YetAnotherFlashlight.zip",
+    "dependencies": ["z77/less-inaccurate-weapon-laser"]
+  },
+  {
+    "id": "fixed-mutators",
+    "name": "Fixed Mutators",
+    "desc": "fixes a few mutators so they don't crash.",
+    "download_url": "https://pd2mods.z77.fr/update/FixedMutators.zip",
+    "dependencies": []
+  }
+]

@@ -18,3 +18,5 @@ semver = { version = "1.0.28", features = ["serde"] }
 compress-tools = "0.16.1"
 sanitize-filename = "0.6.0"
 colored = "2"
+regex = "1.13.1"
+strsim = "0.11.1"

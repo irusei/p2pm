@@ -1,6 +1,6 @@
 use crate::cli::SearchArgs;
 use crate::error::Result;
-use crate::repos::mws;
+use crate::repos::aggregator;
 use colored::Colorize;
 
 pub async fn run(args: SearchArgs) -> Result<()> {
@@ -10,7 +10,7 @@ pub async fn run(args: SearchArgs) -> Result<()> {
         format!("Searching for '{}'...", args.query).bold()
     );
 
-    let results = mws::search_mods(&args.query, args.limit).await?;
+    let results = aggregator::search_mods(&args.query, args.limit).await?;
 
     if results.is_empty() {
         println!(
@@ -22,7 +22,7 @@ pub async fn run(args: SearchArgs) -> Result<()> {
     }
 
     for result in &results {
-        let pkg_ref = format!("mws/{} ({})", result.id, result.name);
+        let pkg_ref = format!("{} ({})", result.id, result.name);
 
         // Trim
         let desc: String = result.desc.chars().filter(|c| *c != '\n').collect();

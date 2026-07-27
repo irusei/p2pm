@@ -28,6 +28,35 @@ pub fn get_mod_type(zip_bytes: &[u8]) -> P2PMPackageType {
     P2PMPackageType::Override
 }
 
+pub fn read_mod_txt(zip_bytes: &[u8]) -> Vec<u8> {
+    let cursor = Cursor::new(zip_bytes.to_vec());
+    if let Ok(mut iter) = ArchiveIteratorBuilder::new(cursor).build() {
+        let mut should_append = false;
+        let mut chunks: Vec<u8> = vec![];
+        loop {
+            match iter.next() {
+                Some(ArchiveContents::StartOfEntry(name, _)) => {
+                    if name.ends_with("/mod.txt") || name == "mod.txt" {
+                        should_append = true;
+                    }
+                }
+                Some(ArchiveContents::DataChunk(chunk)) => {
+                    if should_append {
+                        chunks.extend_from_slice(&chunk);
+                    }
+                }
+                Some(ArchiveContents::EndOfEntry) => {
+                    if should_append {
+                        return chunks;
+                    }
+                }
+                Some(ArchiveContents::Err(_)) | None => break,
+            }
+        }
+    }
+    vec![]
+}
+
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub enum P2PMPackageType {
     Mod,
