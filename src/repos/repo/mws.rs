@@ -63,7 +63,7 @@ pub async fn fetch_files_from_mod_id(mod_id: &str) -> Result<Vec<MWSFile>, P2PME
 
     let json = files.json::<MWSFilesData>().await?;
 
-    if json.data.len() == 0 {
+    if json.data.is_empty() {
         return Err(P2PMError::NoDownloadsFound(mod_id.to_string()));
     }
 

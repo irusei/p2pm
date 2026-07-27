@@ -393,28 +393,29 @@ pub async fn install_as_mod(
             loop {
                 match iter.next() {
                     Some(ArchiveContents::StartOfEntry(name, _)) => {
+                        dest_chunk.clear();
                         if &base_folder != "" {
                             if name.contains(&base_folder) && !name.ends_with("/") {
-                                let split_file_name = name.split(&base_folder).nth(1).unwrap();
-                                dest_file_name = Some(format!(
-                                    "{}/{}",
-                                    mod_name_folder.display(),
-                                    split_file_name
-                                ));
-                                println!(
-                                    "{} {}",
-                                    " ".repeat(8),
-                                    dest_file_name.clone().unwrap().dimmed()
-                                );
+                                if let Some((_, rest)) = name.split_once(&base_folder) {
+                                    dest_file_name =
+                                        Some(format!("{}/{}", mod_name_folder.display(), rest));
+                                    println!(
+                                        "{} {}",
+                                        " ".repeat(8),
+                                        dest_file_name.clone().unwrap().dimmed()
+                                    );
+                                }
                             }
                         }
                     }
                     Some(ArchiveContents::DataChunk(chunk)) => {
-                        dest_chunk.extend_from_slice(&chunk);
+                        if dest_file_name.is_some() {
+                            dest_chunk.extend_from_slice(&chunk);
+                        }
                     }
                     Some(ArchiveContents::EndOfEntry) => {
                         // only extract if dest_file_name is set
-                        if let Some(destination) = &dest_file_name {
+                        if let Some(destination) = dest_file_name.take() {
                             let path = PathBuf::from(destination);
                             if let Some(parent) = path.parent() {
                                 if let Err(e) = fs::create_dir_all(parent).await {
@@ -442,8 +443,7 @@ pub async fn install_as_mod(
                                 }
                             }
 
-                            dest_file_name = None;
-                            dest_chunk = vec![];
+                            dest_chunk.clear();
                         }
                     }
                     Some(ArchiveContents::Err(_)) | None => break,
@@ -497,33 +497,36 @@ pub async fn install_as_override(
         loop {
             match iter.next() {
                 Some(ArchiveContents::StartOfEntry(name, _)) => {
-                    // hate this :(
+                    dest_chunk.clear();
                     for folder in &override_asset_folders {
                         let asset_folder = &format!("/{}/", folder);
                         if name.contains(asset_folder) && !name.ends_with("/") {
-                            let split_file_name = name.split(asset_folder).nth(1).unwrap();
-                            dest_file_name = Some(format!(
-                                "{}{}{}",
-                                mod_name_folder.display(),
-                                asset_folder,
-                                split_file_name
-                            ));
-                            println!(
-                                "{} {}",
-                                " ".repeat(8),
-                                dest_file_name.clone().unwrap().dimmed()
-                            );
+                            if let Some((_, rest)) = name.split_once(asset_folder) {
+                                dest_file_name = Some(format!(
+                                    "{}{}{}",
+                                    mod_name_folder.display(),
+                                    asset_folder,
+                                    rest
+                                ));
+                                println!(
+                                    "{} {}",
+                                    " ".repeat(8),
+                                    dest_file_name.as_ref().unwrap().dimmed()
+                                );
+                            }
                             break;
                         }
                     }
                 }
                 Some(ArchiveContents::DataChunk(chunk)) => {
-                    dest_chunk.extend_from_slice(&chunk);
+                    if dest_file_name.is_some() {
+                        dest_chunk.extend_from_slice(&chunk);
+                    }
                 }
                 Some(ArchiveContents::EndOfEntry) => {
                     // only extract if dest_file_name is set
-                    if let Some(destination) = &dest_file_name {
-                        let path = PathBuf::from(destination);
+                    if let Some(destination) = dest_file_name.take() {
+                        let path = PathBuf::from(&destination);
                         if let Some(parent) = path.parent() {
                             if let Err(e) = fs::create_dir_all(parent).await {
                                 println!(
@@ -550,8 +553,7 @@ pub async fn install_as_override(
                             }
                         }
 
-                        dest_file_name = None;
-                        dest_chunk = vec![];
+                        dest_chunk.clear();
                     }
                 }
                 Some(ArchiveContents::Err(_)) | None => break,
