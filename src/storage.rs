@@ -117,7 +117,8 @@ pub async fn get_installed_version(
     }
 
     let content = fs::read_to_string(&json_path).await?;
-    let installed: Vec<P2PMPackage> = serde_json::from_str(&content).unwrap_or_default();
+    let installed: Vec<P2PMPackage> = serde_json::from_str(&content)
+        .map_err(|e| P2PMError::Config(format!("Failed to parse p2pm_mods.json: {e}")))?;
 
     for pkg in installed {
         if pkg.repo_id == repo_id && pkg.pkg_id == pkg_id {
@@ -151,9 +152,8 @@ pub async fn get_untracked_mods() -> Result<Vec<UntrackedMod>, P2PMError> {
     // Scan mods folder
     let mods_path = game_root.join("mods");
     if mods_path.is_dir() {
-        let mut entries = fs::read_dir(&mods_path).await.ok();
-        while let Some(ref mut entries) = entries {
-            if let Some(entry) = entries.next_entry().await.ok().flatten() {
+        if let Ok(mut entries) = fs::read_dir(&mods_path).await {
+            while let Some(entry) = entries.next_entry().await.ok().flatten() {
                 let name = entry.file_name().to_string_lossy().to_string();
                 let path = entry.path();
                 if path.is_dir() && !tracked_names.contains(&name) && name != "base" {
@@ -165,8 +165,6 @@ pub async fn get_untracked_mods() -> Result<Vec<UntrackedMod>, P2PMError> {
                         });
                     }
                 }
-            } else {
-                break;
             }
         }
     }
@@ -174,9 +172,8 @@ pub async fn get_untracked_mods() -> Result<Vec<UntrackedMod>, P2PMError> {
     // Scan mod_overrides folder
     let overrides_path = game_root.join("assets").join("mod_overrides");
     if overrides_path.is_dir() {
-        let mut entries = fs::read_dir(&overrides_path).await.ok();
-        while let Some(ref mut entries) = entries {
-            if let Some(entry) = entries.next_entry().await.ok().flatten() {
+        if let Ok(mut entries) = fs::read_dir(&overrides_path).await {
+            while let Some(entry) = entries.next_entry().await.ok().flatten() {
                 let name = entry.file_name().to_string_lossy().to_string();
                 let path = entry.path();
                 if path.is_dir() && !tracked_names.contains(&name) {
@@ -186,8 +183,6 @@ pub async fn get_untracked_mods() -> Result<Vec<UntrackedMod>, P2PMError> {
                         mod_type: P2PMPackageType::Override,
                     });
                 }
-            } else {
-                break;
             }
         }
     }
@@ -195,9 +190,8 @@ pub async fn get_untracked_mods() -> Result<Vec<UntrackedMod>, P2PMError> {
     // Scan Maps folder
     let maps_path = game_root.join("Maps");
     if maps_path.is_dir() {
-        let mut entries = fs::read_dir(&maps_path).await.ok();
-        while let Some(ref mut entries) = entries {
-            if let Some(entry) = entries.next_entry().await.ok().flatten() {
+        if let Ok(mut entries) = fs::read_dir(&maps_path).await {
+            while let Some(entry) = entries.next_entry().await.ok().flatten() {
                 let name = entry.file_name().to_string_lossy().to_string();
                 let path = entry.path();
                 if path.is_dir() && !tracked_names.contains(&name) {
@@ -207,8 +201,6 @@ pub async fn get_untracked_mods() -> Result<Vec<UntrackedMod>, P2PMError> {
                         mod_type: P2PMPackageType::Map,
                     });
                 }
-            } else {
-                break;
             }
         }
     }
@@ -228,7 +220,8 @@ pub async fn get_all_installed_packages() -> Result<Vec<P2PMPackage>, P2PMError>
     }
 
     let content = fs::read_to_string(&json_path).await?;
-    let installed: Vec<P2PMPackage> = serde_json::from_str(&content).unwrap_or_default();
+    let installed: Vec<P2PMPackage> = serde_json::from_str(&content)
+        .map_err(|e| P2PMError::Config(format!("Failed to parse p2pm_mods.json: {e}")))?;
 
     Ok(installed)
 }
@@ -245,7 +238,8 @@ pub async fn uninstall_package(repo_id: &str, pkg_id: &str) -> Result<(), P2PMEr
     }
 
     let content = fs::read_to_string(&json_path).await?;
-    let mut installed: Vec<P2PMPackage> = serde_json::from_str(&content).unwrap_or_default();
+    let mut installed: Vec<P2PMPackage> = serde_json::from_str(&content)
+        .map_err(|e| P2PMError::Config(format!("Failed to parse p2pm_mods.json: {e}")))?;
 
     let (mod_name, mod_type) = installed
         .iter()
@@ -311,7 +305,8 @@ pub async fn save_installed_packages(
     // load existing packages or start empty
     let mut installed: Vec<P2PMPackage> = if json_path.exists() {
         let content = fs::read_to_string(&json_path).await?;
-        serde_json::from_str(&content).unwrap_or_default()
+        serde_json::from_str(&content)
+            .map_err(|e| P2PMError::Config(format!("Failed to parse p2pm_mods.json: {e}")))?
     } else {
         Vec::new()
     };
