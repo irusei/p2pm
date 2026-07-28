@@ -1,5 +1,5 @@
-use std::io::Cursor;
 use std::path::PathBuf;
+use std::{io::Cursor, path::Component};
 
 use bytes::Bytes;
 use color_eyre::owo_colors::OwoColorize;
@@ -458,6 +458,19 @@ pub async fn install_as(
                                 if let Some((_, rest)) = name.split_once(&base_folder) {
                                     dest_file_name =
                                         Some(format!("{}/{}", install_folder.display(), rest));
+
+                                    let path = PathBuf::from(dest_file_name.as_ref().unwrap());
+                                    if path.components().any(|c| c == Component::ParentDir) {
+                                        eprintln!(
+                                            "{} {}",
+                                            "[p2pm]".red().bold(),
+                                            format!("Skipping unsafe path {}", path.display())
+                                                .yellow()
+                                        );
+                                        dest_file_name = None;
+                                        continue;
+                                    }
+
                                     println!(
                                         "{} {}",
                                         " ".repeat(8),
@@ -475,7 +488,7 @@ pub async fn install_as(
                     Some(ArchiveContents::EndOfEntry) => {
                         // only extract if dest_file_name is set
                         if let Some(destination) = dest_file_name.take() {
-                            let path = PathBuf::from(destination);
+                            let path = PathBuf::from(&destination);
                             if let Some(parent) = path.parent() {
                                 if let Err(e) = fs::create_dir_all(parent).await {
                                     println!(
@@ -567,6 +580,18 @@ pub async fn install_as_override(
                                     asset_folder,
                                     rest
                                 ));
+
+                                let path = PathBuf::from(dest_file_name.as_ref().unwrap());
+                                if path.components().any(|c| c == Component::ParentDir) {
+                                    eprintln!(
+                                        "{} {}",
+                                        "[p2pm]".red().bold(),
+                                        format!("Skipping unsafe path {}", path.display()).yellow()
+                                    );
+                                    dest_file_name = None;
+                                    continue;
+                                }
+
                                 println!(
                                     "{} {}",
                                     " ".repeat(8),
