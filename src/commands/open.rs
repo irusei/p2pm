@@ -34,20 +34,30 @@ pub async fn run(args: OpenArgs) -> Result<()> {
         .map_err(|e| P2PMError::Config(e.to_string()))?
         .ok_or(P2PMError::GameRootNotSet)?;
 
-    let path = match &pkg.pkg_type {
-        storage::P2PMPackageType::Override => {
+    let path = match pkg.pkg_type {
+        Some(storage::P2PMPackageType::Override) => {
             let mut path = game_root.clone();
             path.push("assets");
             path.push("mod_overrides");
             path.push(&mod_name);
             path
         }
-        _ => {
-            // Default to mods folder
+        Some(storage::P2PMPackageType::Mod) => {
             let mut path = game_root.clone();
             path.push("mods");
             path.push(&mod_name);
             path
+        }
+        Some(storage::P2PMPackageType::Map) => {
+            let mut path = game_root.clone();
+            path.push("Maps");
+            path.push(&mod_name);
+            path
+        }
+        _ => {
+            return Err(color_eyre::eyre::Report::from(P2PMError::NotFound(
+                format!("Mod folder not found for {}/{}", pkg.repo_id, pkg.pkg_id),
+            )));
         }
     };
 

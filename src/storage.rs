@@ -4,32 +4,55 @@ use std::path::PathBuf;
 use bytes::Bytes;
 use color_eyre::owo_colors::OwoColorize;
 use compress_tools::{ArchiveContents, ArchiveIteratorBuilder};
+use regex::Regex;
 use semver::Version;
 use tokio::fs;
 
 use crate::{config, error::P2PMError, repos::aggregator};
 
-pub fn get_mod_type(zip_bytes: &[u8]) -> P2PMPackageType {
+pub fn get_mod_type(zip_bytes: &[u8]) -> Option<P2PMPackageType> {
+    let mut should_read = false;
+    let mut chunks: Vec<u8> = vec![];
     let cursor = Cursor::new(zip_bytes.to_vec());
     if let Ok(mut iter) = ArchiveIteratorBuilder::new(cursor).build() {
         loop {
-            match iter.next_header() {
+            match iter.next() {
                 Some(ArchiveContents::StartOfEntry(name, _)) => {
-                    if name.ends_with("/mod.txt")
-                        || name == "mod.txt"
-                        || name.ends_with("/main.xml")
-                        || name == "main.xml"
-                    {
-                        return P2PMPackageType::Mod;
+                    if name.ends_with("/mod.txt") || name == "mod.txt" {
+                        return Some(P2PMPackageType::Mod);
+                    }
+                    if name.ends_with("/main.xml") || name == "main.xml" {
+                        // read main.xml to determine between Map and Mod
+                        should_read = true;
                     }
                 }
-                Some(ArchiveContents::DataChunk(_)) => {}
-                Some(ArchiveContents::EndOfEntry) => {}
+                Some(ArchiveContents::DataChunk(chunk)) => {
+                    if should_read {
+                        chunks.extend_from_slice(&chunk);
+                    }
+                }
+                Some(ArchiveContents::EndOfEntry) => {
+                    if should_read {
+                        break;
+                    }
+                }
                 Some(ArchiveContents::Err(_)) | None => break,
             }
         }
     }
-    P2PMPackageType::Override
+
+    if should_read {
+        if let Ok(content) = String::from_utf8(chunks) {
+            if Regex::new(r"<Mod\b").is_ok_and(|re| re.is_match(&content)) {
+                return Some(P2PMPackageType::Mod);
+            }
+            if Regex::new(r"<table\b").is_ok_and(|re| re.is_match(&content)) {
+                return Some(P2PMPackageType::Map);
+            }
+        }
+        return None;
+    }
+    Some(P2PMPackageType::Override)
 }
 
 pub fn read_mod_txt(zip_bytes: &[u8]) -> Vec<u8> {
@@ -65,7 +88,7 @@ pub fn read_mod_txt(zip_bytes: &[u8]) -> Vec<u8> {
 pub enum P2PMPackageType {
     Mod,
     Override,
-    TBD,
+    Map,
 }
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
@@ -76,7 +99,7 @@ pub struct P2PMPackage {
     pub desc: String,
     pub version: Version,
     pub dependencies: Vec<String>,
-    pub pkg_type: P2PMPackageType,
+    pub pkg_type: Option<P2PMPackageType>,
 }
 
 pub async fn get_installed_version(
@@ -169,6 +192,27 @@ pub async fn get_untracked_mods() -> Result<Vec<UntrackedMod>, P2PMError> {
         }
     }
 
+    // Scan Maps folder
+    let maps_path = game_root.join("Maps");
+    if maps_path.is_dir() {
+        let mut entries = fs::read_dir(&maps_path).await.ok();
+        while let Some(ref mut entries) = entries {
+            if let Some(entry) = entries.next_entry().await.ok().flatten() {
+                let name = entry.file_name().to_string_lossy().to_string();
+                let path = entry.path();
+                if path.is_dir() && !tracked_names.contains(&name) {
+                    untracked.push(UntrackedMod {
+                        name,
+                        path,
+                        mod_type: P2PMPackageType::Map,
+                    });
+                }
+            } else {
+                break;
+            }
+        }
+    }
+
     Ok(untracked)
 }
 
@@ -207,7 +251,7 @@ pub async fn uninstall_package(repo_id: &str, pkg_id: &str) -> Result<(), P2PMEr
         .iter()
         .find(|p| p.repo_id == repo_id && p.pkg_id == pkg_id)
         .map(|p| (p.name.clone(), p.pkg_type.clone()))
-        .unwrap_or_else(|| (String::new(), P2PMPackageType::TBD));
+        .unwrap_or_else(|| (String::new(), None));
 
     // Make sure it actually existed ig
     let original_len = installed.len();
@@ -225,7 +269,7 @@ pub async fn uninstall_package(repo_id: &str, pkg_id: &str) -> Result<(), P2PMEr
     let mod_name = sanitize_filename::sanitize(&mod_name);
 
     match mod_type {
-        P2PMPackageType::Mod => {
+        Some(P2PMPackageType::Mod) => {
             let mut mods_path = game_root.clone();
             mods_path.push("mods");
             mods_path.push(&mod_name);
@@ -233,13 +277,21 @@ pub async fn uninstall_package(repo_id: &str, pkg_id: &str) -> Result<(), P2PMEr
                 fs::remove_dir_all(&mods_path).await?;
             }
         }
-        P2PMPackageType::Override => {
+        Some(P2PMPackageType::Override) => {
             let mut overrides_path = game_root.clone();
             overrides_path.push("assets");
             overrides_path.push("mod_overrides");
             overrides_path.push(&mod_name);
             if overrides_path.exists() {
                 fs::remove_dir_all(&overrides_path).await?;
+            }
+        }
+        Some(P2PMPackageType::Map) => {
+            let mut maps_path = game_root.clone();
+            maps_path.push("Maps");
+            maps_path.push(&mod_name);
+            if maps_path.exists() {
+                fs::remove_dir_all(&maps_path).await?;
             }
         }
         _ => {}
@@ -304,6 +356,13 @@ async fn create_missing_paths(game_root: &PathBuf) -> Result<(), P2PMError> {
         .await
         .map_err(|_| P2PMError::Permission(mods_folder.display().to_string()))?;
 
+    let mut maps_folder = game_root.clone();
+    maps_folder.push("Maps");
+
+    fs::create_dir_all(&maps_folder)
+        .await
+        .map_err(|_| P2PMError::Permission(maps_folder.display().to_string()))?;
+
     Ok(())
 }
 
@@ -323,11 +382,11 @@ pub async fn install_mod_from_zip(
     let pkg_type = get_mod_type(&zip_bytes);
 
     match pkg_type {
-        P2PMPackageType::Mod => {
+        Some(P2PMPackageType::Mod) => {
             println!("{} {}", "[p2pm]".cyan().bold(), "Installing as mod".bold());
-            install_as_mod(&game_root, &mod_data, &zip_bytes).await?;
+            install_as(&game_root, &mod_data, &zip_bytes, "mods").await?;
         }
-        P2PMPackageType::Override => {
+        Some(P2PMPackageType::Override) => {
             println!(
                 "{} {}",
                 "[p2pm]".cyan().bold(),
@@ -335,7 +394,11 @@ pub async fn install_mod_from_zip(
             );
             install_as_override(&game_root, &mod_data, &zip_bytes).await?;
         }
-        _ => return Err(P2PMError::UnknownType(mod_data.name)), // this will never happen
+        Some(P2PMPackageType::Map) => {
+            println!("{} {}", "[p2pm]".cyan().bold(), "Installing as map".bold());
+            install_as(&game_root, &mod_data, &zip_bytes, "Maps").await?;
+        }
+        None => return Err(P2PMError::UnknownType(mod_data.name)),
     }
 
     // Save to p2pm_mods.json
@@ -347,19 +410,20 @@ pub async fn install_mod_from_zip(
     Ok(())
 }
 
-pub async fn install_as_mod(
+pub async fn install_as(
     game_root: &PathBuf,
     mod_data: &P2PMPackage,
     zip_bytes: &Bytes,
+    subfolder: &str,
 ) -> Result<(), P2PMError> {
-    let mut mod_name_folder = game_root.clone();
-    mod_name_folder.push("mods");
+    let mut install_folder = game_root.clone();
+    install_folder.push(subfolder);
 
     // check if folder already exists
-    mod_name_folder.push(sanitize_filename::sanitize(&mod_data.name));
+    install_folder.push(sanitize_filename::sanitize(&mod_data.name));
 
-    if mod_name_folder.exists() {
-        fs::remove_dir_all(&mod_name_folder).await?;
+    if install_folder.exists() {
+        fs::remove_dir_all(&install_folder).await?;
     }
 
     let mut base_folder: Option<String> = None;
@@ -398,7 +462,7 @@ pub async fn install_as_mod(
                             if name.contains(&base_folder) && !name.ends_with("/") {
                                 if let Some((_, rest)) = name.split_once(&base_folder) {
                                     dest_file_name =
-                                        Some(format!("{}/{}", mod_name_folder.display(), rest));
+                                        Some(format!("{}/{}", install_folder.display(), rest));
                                     println!(
                                         "{} {}",
                                         " ".repeat(8),

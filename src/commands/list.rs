@@ -58,7 +58,7 @@ pub async fn run() -> Result<()> {
             let type_str = match mod_info.mod_type {
                 storage::P2PMPackageType::Mod => "mod",
                 storage::P2PMPackageType::Override => "override",
-                _ => "unknown",
+                storage::P2PMPackageType::Map => "map",
             };
             println!(
                 "{}  {} [{}]",

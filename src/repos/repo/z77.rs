@@ -48,7 +48,7 @@ pub async fn fetch_package_data_and_download_url(
         desc: z77_mod.desc.clone(),
         version: get_latest_version(&mod_id).await?,
         dependencies: z77_mod.dependencies.clone(),
-        pkg_type: crate::storage::P2PMPackageType::TBD,
+        pkg_type: None,
     };
 
     Ok((package, z77_mod.download_url.clone()))
